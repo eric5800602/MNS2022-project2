@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "esp.h": "c",
+        "pfkeyv2.h": "c"
+    }
+}

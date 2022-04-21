@@ -55,7 +55,7 @@ ssize_t send_msg(Dev *dev,
 
     ssize_t nb;
     uint8_t buf[BUFSIZE];
-
+    printf("check = %d\n",strlen(str));
     if(str != NULL){
         int i;
         for(i = 0; i < strlen(str); i++){
@@ -82,9 +82,10 @@ bool dissect_rx_data(Dev *dev,
                 char* server_ip,
                 bool* test_for_dissect)
 {
+    printf("check enrty net dissect\n");
     uint8_t *net_data = net->dissect(net, dev->frame + LINKHDRLEN, dev->framelen - LINKHDRLEN);
-
     if (net->pro == ESP) {
+        printf("check enrty ESP dissect\n");
         uint8_t *esp_data = esp->dissect(esp, net_data, net->plen);
 
         uint8_t *txp_data = txp->dissect(net, txp, esp_data, esp->plen);
@@ -126,6 +127,7 @@ uint8_t *wait(Dev *dev,
     bool dissect_finish;
 
     while (true) {
+        printf("check enrty\n");
         dev->framelen = dev->rx_frame(dev);
         dissect_finish = dissect_rx_data(dev, net, esp, txp, state, victim_ip, server_ip, test_for_dissect) ? true : false;
         if(dissect_finish) break;
@@ -156,6 +158,7 @@ void record_txp(Net *net, Esp *esp, Txp *txp)
         txp->x_src_port = ntohs(txp->thdr.th_dport);
         txp->x_dst_port = ntohs(txp->thdr.th_sport);
     }
+    printf("check\n");
 }
 
 void get_info(Dev *dev, Net *net, Esp *esp, Txp *txp,int *state,char* victim_ip,char* server_ip,bool* test_for_dissect)

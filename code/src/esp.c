@@ -13,6 +13,26 @@ void get_ik(int type, uint8_t *key)
 {
     // [TODO]: Dump authentication key from security association database (SADB)
     // (Ref. RFC2367 Section 2.3.4 & 2.4 & 3.1.10)
+    /* build and write SADB_SUMP request */
+    char buf[4096];
+    int s = socket(PF_KEY,SOCK_RAW,PF_KEY_V2);
+    struct sadb_msg msg;
+    bzero(&msg,sizeof(msg));
+    msg.sadb_msg_type = SADB_GET;
+    msg.sadb_msg_satype = type;
+    msg.sadb_msg_len = sizeof(msg) /8;
+    msg.sadb_msg_pid = getpid();
+    write(s,&msg,sizeof(msg));
+    int goteof = 0;
+    while(goteof == 0){
+        int msglen;
+        struct sadb_msg *msgp;
+        msglen = read(s,&buf,sizeof(buf));
+        msgp = (struct sadb_msg*) &buf;
+        if(msgp->sadb_msg_seq == 0)
+            goteof = 1;
+    }
+    close(s);
 }
 
 void get_esp_key(Esp *self)
@@ -57,6 +77,7 @@ uint8_t *set_esp_auth(Esp *self,
 uint8_t *dissect_esp(Esp *self, uint8_t *esp_pkt, size_t esp_len)
 {
     // [TODO]: Collect information from esp_pkt.
+    
     // Return payload of ESP
 }
 

@@ -24,6 +24,7 @@ debug: $(ONUE)
 
 ue_call_sim: src/main.c $(DEPS)
 	$(ARMCC) $^ -o $@ $(CFLAGS) $(DFLAG) $(ARMFLAGS) -O2
+	adb push ./ue_call_sim /data/local/tmp/project2/
 
 pc_call_sim: src/main.c $(DEPS)
 	$(CC) $^ -o $@ $(CFLAGS) $(DFLAG)
