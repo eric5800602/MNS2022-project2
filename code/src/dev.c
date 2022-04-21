@@ -8,13 +8,14 @@
 #include <net/if.h>
 #include <linux/if_ether.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #include "dev.h"
 #include "net.h"
 #include "esp.h"
 #include "replay.h"
 #include "transport.h"
-
+extern int errno;
 inline static int get_ifr_mtu(struct ifreq *ifr)
 {
     int fd;
@@ -37,9 +38,34 @@ inline static struct sockaddr_ll init_addr(char *name)
 {
     struct sockaddr_ll addr;
     bzero(&addr, sizeof(addr));
-
+    /*
+    unsigned short	sll_family;
+	__be16		sll_protocol;
+	int		sll_ifindex;
+	unsigned short	sll_hatype;
+	unsigned char	sll_pkttype;
+	unsigned char	sll_halen;
+	unsigned char	sll_addr[8];
+    */
     // [TODO]: Fill up struct sockaddr_ll addr which will be used to bind in func set_sock_fd
-    
+    // Change dev name to sll_index
+    struct ifreq ifr;
+    int s;
+    s = socket(AF_INET,SOCK_DGRAM,0);
+    memcpy(ifr.ifr_name,name,strlen(name));
+    printf("ifr.ifr_name = %s\n",ifr.ifr_name);
+    int err = ioctl(s,SIOCGIFINDEX,&ifr);
+    if(!err){
+        printf("DEV INDEX = %d\n",ifr.ifr_ifindex);
+        addr.sll_ifindex = ifr.ifr_ifindex;
+    }
+    else{
+        printf("ioctl:%s\n",strerror(errno));
+    }
+    close(s);
+    addr.sll_family = AF_PACKET;
+    addr.sll_protocol = htons(ETH_P_IP);
+
     if (addr.sll_ifindex == 0) {
         perror("if_nameindex()");
         exit(EXIT_FAILURE);
