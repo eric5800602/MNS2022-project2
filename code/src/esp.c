@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <linux/pfkeyv2.h>
+#include <inttypes.h>
 
 #include "esp.h"
 #include "transport.h"
@@ -14,6 +15,7 @@ void get_ik(int type, uint8_t *key)
     // [TODO]: Dump authentication key from security association database (SADB)
     // (Ref. RFC2367 Section 2.3.4 & 2.4 & 3.1.10)
     /* build and write SADB_SUMP request */
+    /* Wrong code*/
     char buf[4096];
     int s = socket(PF_KEY,SOCK_RAW,PF_KEY_V2);
     struct sadb_msg msg;
@@ -74,10 +76,16 @@ uint8_t *set_esp_auth(Esp *self,
     return self->auth;
 }
 
+
 uint8_t *dissect_esp(Esp *self, uint8_t *esp_pkt, size_t esp_len)
 {
     // [TODO]: Collect information from esp_pkt.
-    
+    EspHeader *esph = (EspHeader*) esp_pkt;
+    self->hdr.spi = ntohl(esph->spi);
+    self->hdr.seq = ntohl(esph->seq);
+    // printf("self->hdr.spi = %"PRIu32"\n",self->hdr.spi);
+    // printf("self->hdr.seq = %"PRIu32"\n",self->hdr.seq);
+
     // Return payload of ESP
 }
 
