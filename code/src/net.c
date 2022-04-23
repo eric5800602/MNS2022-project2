@@ -27,8 +27,9 @@ uint8_t *dissect_ip(Net *self, uint8_t *pkt, size_t pkt_len)
     // printf("Dst = %s\n",self->dst_ip);
     
     struct ip *iph = (struct ip*) pkt;
-
+    memcpy(&(self->ip4hdr),iph,sizeof(struct ip));
     //printf("ip_hl = %u\n",(iph->ip_hl)*4);
+    //store as bytes
     self->hdrlen = (size_t)(iph->ip_hl)*4;
 
     /* calculate payload length */

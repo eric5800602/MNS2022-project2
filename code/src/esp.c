@@ -81,13 +81,16 @@ uint8_t *dissect_esp(Esp *self, uint8_t *esp_pkt, size_t esp_len)
 {
     // [TODO]: Collect information from esp_pkt.
     EspHeader *esph = (EspHeader*) esp_pkt;
-    self->hdr.spi = ntohl(esph->spi);
-    self->hdr.seq = ntohl(esph->seq);
-    // printf("self->hdr.spi = %"PRIu32"\n",self->hdr.spi);
-    // printf("self->hdr.seq = %"PRIu32"\n",self->hdr.seq);
-
-
+    memcpy(&(self->hdr),esph,sizeof(EspHeader));
+    //  printf("self->hdr.spi = %"PRIu32"\n",ntohl(self->hdr.spi));
+    //  printf("self->hdr.seq = %"PRIu32"\n",ntohl(self->hdr.seq));
+    self->pl = esp_pkt + sizeof(EspHeader);
+    uint8_t *esp_t = self->pl + sizeof(struct tcphdr);
+    // for(int i = 0;esp_t[i] != NULL;i++){
+    //     printf("esp_t[%d] = %x\n",i,esp_t[i]);
+    // }
     // Return payload of ESP
+    return self->pl;
 }
 
 Esp *fmt_esp_rep(Esp *self, Proto p)

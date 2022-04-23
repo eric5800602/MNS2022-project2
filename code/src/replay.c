@@ -55,7 +55,6 @@ ssize_t send_msg(Dev *dev,
 
     ssize_t nb;
     uint8_t buf[BUFSIZE];
-    printf("check = %d\n",strlen(str));
     if(str != NULL){
         int i;
         for(i = 0; i < strlen(str); i++){
@@ -89,13 +88,11 @@ bool dissect_rx_data(Dev *dev,
         uint8_t *esp_data = esp->dissect(esp, net_data, net->plen);
 
         uint8_t *txp_data = txp->dissect(net, txp, esp_data, esp->plen);
-
         if(txp->thdr.psh){
             if(*test_for_dissect){
                 char str[] = "I am client, and I am keeping sending message to server hahahaha";
                 char *token = strtok((char *)txp_data, ":");
                 token = strtok(NULL, ":");
-
                 if(!strncmp(str, token, strlen(str))){
                     *test_for_dissect = false;
                     puts("you can start to send the message...");
@@ -158,7 +155,6 @@ void record_txp(Net *net, Esp *esp, Txp *txp)
         txp->x_src_port = ntohs(txp->thdr.th_dport);
         txp->x_dst_port = ntohs(txp->thdr.th_sport);
     }
-    printf("check\n");
 }
 
 void get_info(Dev *dev, Net *net, Esp *esp, Txp *txp,int *state,char* victim_ip,char* server_ip,bool* test_for_dissect)
