@@ -59,7 +59,7 @@ struct esp {
     Esp *(*fmt_rep)(Esp *self, Proto p);
 };
 
-void get_ik(int type, uint8_t *key);
+void get_ik(int type, uint8_t **key);
 
 void get_esp_key(Esp *self);
 
