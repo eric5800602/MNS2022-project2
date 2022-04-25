@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "esp.h": "c",
-        "pfkeyv2.h": "c"
-    }
+        "pfkeyv2.h": "c",
+        "time.h": "c",
+        "ip.h": "c",
+        "in.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
