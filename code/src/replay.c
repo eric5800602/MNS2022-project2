@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <inttypes.h>
 
 #include "replay.h"
 #include "dev.h"
@@ -23,6 +24,8 @@ void tx_esp_rep(Dev dev,
 
     txp.plen = dlen;
     txp.fmt_rep(&txp, net.ip4hdr, data, nb);
+    printf("txp.pl[0] = %x\n",txp.pl[0]);
+    printf("txp.pl[1] = %x\n",txp.pl[1]);
     nb += sizeof(struct tcphdr);
 
     esp.plen = nb;
@@ -66,7 +69,7 @@ ssize_t send_msg(Dev *dev,
     } else {
 	    nb = 0;
     }
-
+    printf("test entry\n");
     tx_esp_rep(*dev, *net, *esp, *txp, buf, nb, 0);
 
     return nb;
@@ -172,7 +175,6 @@ void get_info(Dev *dev, Net *net, Esp *esp, Txp *txp,int *state,char* victim_ip,
 
         txp->x_src_port = ntohs(txp->thdr.th_sport);
         txp->x_dst_port = ntohs(txp->thdr.th_dport);
-
         record_txp(net, esp, txp);
         esp_hdr_rec.spi = esp->hdr.spi;
         esp->get_key(esp);

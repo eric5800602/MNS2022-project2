@@ -5,8 +5,8 @@ echo 0 > /proc/sys/net/ipv4/tcp_timestamps
 vic_ip='192.168.1.172'
 serv_ip='192.168.1.128'
 
-vic_port=1234
-serv_port=2222
+vic_port='1234'
+serv_port='2222'
 
 ip xfrm state deleteall
 ip xfrm policy deleteall
