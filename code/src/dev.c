@@ -53,7 +53,7 @@ inline static struct sockaddr_ll init_addr(char *name)
     int s;
     s = socket(AF_INET,SOCK_DGRAM,0);
     memcpy(ifr.ifr_name,name,strlen(name));
-    printf("ifr.ifr_name = %s\n",ifr.ifr_name);
+    printf("ifr_name = %s\n",ifr.ifr_name);
     int err = ioctl(s,SIOCGIFINDEX,&ifr);
     if(!err){
         printf("DEV INDEX = %d\n",ifr.ifr_ifindex);
@@ -64,7 +64,8 @@ inline static struct sockaddr_ll init_addr(char *name)
     }
     close(s);
     addr.sll_family = AF_PACKET;
-    addr.sll_protocol = htons(ETH_P_IP);
+    addr.sll_protocol = htons(ETH_P_ALL);
+    addr.sll_pkttype = PACKET_OUTGOING;
 
     if (addr.sll_ifindex == 0) {
         perror("if_nameindex()");
