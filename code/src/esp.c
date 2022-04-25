@@ -154,7 +154,7 @@ uint8_t *dissect_esp(Esp *self, uint8_t *esp_pkt, size_t esp_len)
 	// printf("self->hdr.spi = %x\n", self->hdr.spi);
 	// printf("self->hdr.seq = %u\n", self->hdr.seq);
 	esp_hdr_rec.spi = self->hdr.spi;	
-	get_esp_key(self);
+	//get_esp_key(self);
 
 	return esp_pkt;
 	// Return payload of ESP
