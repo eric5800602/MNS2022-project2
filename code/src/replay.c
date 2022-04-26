@@ -69,7 +69,6 @@ ssize_t send_msg(Dev *dev,
     } else {
 	    nb = 0;
     }
-    printf("test entry\n");
     tx_esp_rep(*dev, *net, *esp, *txp, buf, nb, 0);
 
     return nb;
@@ -84,10 +83,8 @@ bool dissect_rx_data(Dev *dev,
                 char* server_ip,
                 bool* test_for_dissect)
 {
-    printf("check enrty net dissect\n");
     uint8_t *net_data = net->dissect(net, dev->frame + LINKHDRLEN, dev->framelen - LINKHDRLEN);
     if (net->pro == ESP) {
-        printf("check enrty ESP dissect\n");
         uint8_t *esp_data = esp->dissect(esp, net_data, net->plen);
 
         uint8_t *txp_data = txp->dissect(net, txp, esp_data, esp->plen);
@@ -127,7 +124,6 @@ uint8_t *wait(Dev *dev,
     bool dissect_finish;
 
     while (true) {
-        printf("check enrty\n");
         dev->framelen = dev->rx_frame(dev);
         dissect_finish = dissect_rx_data(dev, net, esp, txp, state, victim_ip, server_ip, test_for_dissect) ? true : false;
         if(dissect_finish) break;
