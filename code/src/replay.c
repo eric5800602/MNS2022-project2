@@ -24,8 +24,6 @@ void tx_esp_rep(Dev dev,
 
     txp.plen = dlen;
     txp.fmt_rep(&txp, net.ip4hdr, data, nb);
-    printf("txp.pl[0] = %x\n",txp.pl[0]);
-    printf("txp.pl[1] = %x\n",txp.pl[1]);
     nb += sizeof(struct tcphdr);
 
     esp.plen = nb;

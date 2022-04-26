@@ -71,7 +71,7 @@ Net *fmt_net_rep(Net *self)
 {
     // [TODO]: Fill up self->ip4hdr (prepare to send)
     // totl = plen + header len and net plen is set in replay.c/tx_esp_rep
-    self->ip4hdr.tot_len = self->plen + self->ip4hdr.ihl *4;
+    self->ip4hdr.tot_len = htons(self->plen + self->ip4hdr.ihl *4);
     // fill checksum
     self->ip4hdr.check = cal_ipv4_cksm(self->ip4hdr);
     
