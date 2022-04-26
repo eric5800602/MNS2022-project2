@@ -4,7 +4,8 @@
         "pfkeyv2.h": "c",
         "time.h": "c",
         "ip.h": "c",
-        "in.h": "c"
+        "in.h": "c",
+        "net.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

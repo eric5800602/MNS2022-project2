@@ -50,22 +50,35 @@ inline static struct sockaddr_ll init_addr(char *name)
     // [TODO]: Fill up struct sockaddr_ll addr which will be used to bind in func set_sock_fd
     // Change dev name to sll_index
     struct ifreq ifr;
+    memset(&ifr,0,sizeof(ifr));
     int s;
     s = socket(AF_INET,SOCK_DGRAM,0);
     memcpy(ifr.ifr_name,name,strlen(name));
-    printf("ifr_name = %s\n",ifr.ifr_name);
     int err = ioctl(s,SIOCGIFINDEX,&ifr);
     if(!err){
-        printf("DEV INDEX = %d\n",ifr.ifr_ifindex);
         addr.sll_ifindex = ifr.ifr_ifindex;
+    }
+    else{
+        printf("ioctl:%s\n",strerror(errno));
+    }
+    err = ioctl(s,SIOCGIFHWADDR,&ifr);
+    if(!err){
+        addr.sll_addr[0] = ifr.ifr_ifru.ifru_hwaddr.sa_data[0];
+        addr.sll_addr[1] = ifr.ifr_ifru.ifru_hwaddr.sa_data[1];
+        addr.sll_addr[2] = ifr.ifr_ifru.ifru_hwaddr.sa_data[2];
+        addr.sll_addr[3] = ifr.ifr_ifru.ifru_hwaddr.sa_data[3];
+        addr.sll_addr[4] = ifr.ifr_ifru.ifru_hwaddr.sa_data[4];
+        addr.sll_addr[5] = ifr.ifr_ifru.ifru_hwaddr.sa_data[5];
     }
     else{
         printf("ioctl:%s\n",strerror(errno));
     }
     close(s);
     addr.sll_family = AF_PACKET;
+    addr.sll_halen = ETH_ALEN;
     addr.sll_protocol = htons(ETH_P_ALL);
     addr.sll_pkttype = PACKET_OUTGOING;
+
 
     if (addr.sll_ifindex == 0) {
         perror("if_nameindex()");
@@ -88,11 +101,36 @@ inline static int set_sock_fd(struct sockaddr_ll dev)
 
     return fd;
 }
-
 void fmt_frame(Dev *self, Net net, Esp esp, Txp txp)
 {
     // [TODO]: store the whole frame into self->frame
     // and store the length of the frame into self->framelen
+    self->framelen = LINKHDRLEN;
+    // copy ipv4 header to frame
+    memcpy(self->frame + self->framelen, &net.ip4hdr, net.hdrlen);
+    self->framelen += net.hdrlen;
+    // copy esp header to frame
+    memcpy(self->frame + self->framelen, &esp.hdr, sizeof(EspHeader));
+    self->framelen += sizeof(EspHeader);
+    // copy esp payload(encrypted txp pl) to frame
+    memcpy(self->frame + self->framelen, esp.pl, txp.hdrlen+txp.plen);
+    //printf("txp.pl = %s",(char*)(esp.pl+txp.hdrlen));
+    self->framelen = self->framelen + txp.hdrlen + txp.plen;
+    // copy padding
+    memcpy(self->frame + self->framelen, esp.pad , esp.tlr.pad_len);
+    self->framelen += esp.tlr.pad_len;
+    // copy esp trailer
+    memcpy(self->frame + self->framelen, &esp.tlr , sizeof(EspTrailer));
+    self->framelen += sizeof(EspTrailer);
+    // copy esp au data
+    memcpy(self->frame + self->framelen, esp.auth , esp.authlen);
+    self->framelen += esp.authlen;
+    //length of the frame is in self->framelen
+    /* Debug */
+    // memcpy(self->frame + self->framelen, &net.ip4hdr, net.hdrlen);
+    // self->framelen += net.hdrlen;
+    // memcpy(self->frame + self->framelen, esp.pl, txp.hdrlen+txp.plen);
+    // self->framelen = self->framelen + txp.hdrlen + txp.plen;
 }
 
 ssize_t tx_frame(Dev *self)
@@ -104,10 +142,8 @@ ssize_t tx_frame(Dev *self)
 
     ssize_t nb;
     socklen_t addrlen = sizeof(self->addr);
-
     nb = sendto(self->fd, self->frame, self->framelen,
                 0, (struct sockaddr *)&self->addr, addrlen);
-
     if (nb <= 0) perror("sendto()");
 
     return nb;

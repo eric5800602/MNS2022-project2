@@ -13,7 +13,7 @@
 uint16_t cal_tcp_cksm(struct iphdr iphdr, struct tcphdr tcphder, uint8_t *pl, int plen)
 {
     // [TODO]: Finish TCP checksum calculation
-    printf("tcphder.seq = %u\n",ntohl(tcphder.seq));
+    // printf("tcphder.seq = %u\n",ntohl(tcphder.seq));
     uint32_t sum = 0;
     uint16_t headerlen = tcphder.doff << 2;
     uint16_t len = headerlen+plen;
@@ -83,6 +83,7 @@ Txp *fmt_tcp_rep(Txp *self, struct iphdr iphdr, uint8_t *data, size_t dlen)
     // PSH (calculate before)
     self->thdr.psh = self->thdr.psh;
     //payload
+    memset(self->pl,0,IP_MAXPACKET * sizeof(uint8_t));
     memcpy(self->pl, data, dlen);
     // Checksum
     self->thdr.check = 0;

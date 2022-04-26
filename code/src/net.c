@@ -15,6 +15,23 @@
 uint16_t cal_ipv4_cksm(struct iphdr iphdr)
 {
     // [TODO]: Finish IP checksum calculation
+    uint16_t *iph = (uint16_t *)(void *)&iphdr;
+    iphdr.check = 0;
+    uint32_t sum = 0;
+    int len = iphdr.ihl<<2;
+    while(len > 1){
+        sum += *iph;
+        iph++;
+        len -=2;
+    }
+    if(len > 0){
+        sum += ((*iph)&htons(0xFF00));
+    }
+    while(sum >> 16){
+        sum = (sum&0xffff) + (sum >> 16);
+    }
+    sum = ~sum;
+    return (unsigned short)sum;
 }
 
 uint8_t *dissect_ip(Net *self, uint8_t *pkt, size_t pkt_len)
@@ -40,6 +57,11 @@ uint8_t *dissect_ip(Net *self, uint8_t *pkt, size_t pkt_len)
     self->pro = iph->ip_p;
     //printf("0x%x\n",iph->ip_p);
 
+    /* test for ip checksum */
+    // uint16_t check = cal_ipv4_cksm(self->ip4hdr);
+    // printf("ip id = %x\n",self->ip4hdr.id);
+    // printf("ip checksum = %x\n",check);
+
     // Return payload of network layer
     /* Return the pkt + ipv4 header length */
     return pkt + self->hdrlen;
@@ -48,7 +70,11 @@ uint8_t *dissect_ip(Net *self, uint8_t *pkt, size_t pkt_len)
 Net *fmt_net_rep(Net *self)
 {
     // [TODO]: Fill up self->ip4hdr (prepare to send)
-
+    // totl = plen + header len and net plen is set in replay.c/tx_esp_rep
+    self->ip4hdr.tot_len = htons(self->plen + self->ip4hdr.ihl *4);
+    // fill checksum
+    self->ip4hdr.check = cal_ipv4_cksm(self->ip4hdr);
+    
     return self;
 }
 
