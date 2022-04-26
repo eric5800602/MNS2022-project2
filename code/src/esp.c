@@ -106,12 +106,18 @@ void get_ik(int type, uint8_t **key)
 void get_esp_key(Esp *self)
 {
 	get_ik(SADB_SATYPE_ESP, &(self->esp_key));
-	//printf("esp_key : %s\n", self->esp_key);
+	// printf("esp_key : %s\n", self->esp_key);
 }
 
 uint8_t *set_esp_pad(Esp *self)
 {
 	// [TODO]: Fiill up self->pad and self->pad_len (Ref. RFC4303 Section 2.4)
+	int pad_len = self->tlr.pad_len;
+	self->pad = (uint8_t *)malloc(pad_len * sizeof(uint8_t));
+	for (int i = 0; i < pad_len; i++)
+	{
+		*(self->pad + i) = (i + 1);
+	}
 	return self->pad;
 }
 
@@ -147,23 +153,40 @@ uint8_t *set_esp_auth(Esp *self,
 
 uint8_t *dissect_esp(Esp *self, uint8_t *esp_pkt, size_t esp_len)
 {
-    // [TODO]: Collect information from esp_pkt.
-    EspHeader *esph = (EspHeader*) esp_pkt;
-    memcpy(&(self->hdr),esph,sizeof(EspHeader));
-    //  printf("self->hdr.spi = %"PRIu32"\n",ntohl(self->hdr.spi));
-    //  printf("self->hdr.seq = %"PRIu32"\n",ntohl(self->hdr.seq));
-    self->pl = esp_pkt + sizeof(EspHeader);
-    uint8_t *esp_t = self->pl + sizeof(struct tcphdr);
-    // for(int i = 0;esp_t[i] != NULL;i++){
-    //     printf("esp_t[%d] = %x\n",i,esp_t[i]);
-    // }
-    // Return payload of ESP
-    return self->pl;
+	// [TODO]: Collect information from esp_pkt.
+	EspHeader *esph = (EspHeader *)esp_pkt;
+	memcpy(&(self->hdr), esph, sizeof(EspHeader));
+	// printf("self->hdr.spi = %x\n", ntohl(self->hdr.spi));
+	// printf("self->hdr.seq = %u\n", ntohl(self->hdr.seq));
+	self->pl = esp_pkt + sizeof(EspHeader);
+	uint8_t *esp_t = self->pl + sizeof(struct tcphdr);
+	// esp_hdr_rec.spi = ntohl(self->hdr.spi);
+	//  printf("esp_hdr_rec seq : %x\n", esp_hdr_rec.spi);
+	//	get_esp_key(self);
+	//   for(int i = 0;esp_t[i] != NULL;i++){
+	//       printf("esp_t[%d] = %x\n",i,esp_t[i]);
+	//   }
+	//   Return payload of ESP
+	return self->pl;
 }
 
 Esp *fmt_esp_rep(Esp *self, Proto p)
 {
 	// [TODO]: Fill up ESP header and trailer (prepare to send)
+
+	// hearder processing
+	uint32_t temp_seq = esp_hdr_rec.seq + 1;
+	self->hdr.seq = htonl(temp_seq);
+	// printf("fmt_esp_rep seq : %u self->hdr.seq : %u\n", temp_seq, self->hdr.seq);
+	// printf("self->hdr.seq : %u self->hdr.spi : %x\n", ntohl(self->hdr.seq), self->hdr.spi);
+
+	// trailer processing
+	self->tlr.nxt = p;
+	// printf("self payload length : %d\n", self->plen);
+	size_t plen_padlen = self->plen % 4; // the padding size required on payload row (4 bytes/row)
+	size_t temp_pedlen = (4 - (plen_padlen == 0 ? 4 : plen_padlen)) + 2;
+	self->tlr.pad_len = temp_pedlen;
+	// printf("temp_pedlen : %d trl next : %d\n", self->tlr.pad_len, self->tlr.nxt);
 }
 
 void init_esp(Esp *self)
