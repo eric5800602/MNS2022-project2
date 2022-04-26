@@ -53,7 +53,6 @@ ssize_t send_msg(Dev *dev,
         fprintf(stderr, "Invalid arguments of %s.\n", __func__);
         return -1;
     }
-
     ssize_t nb;
     uint8_t buf[BUFSIZE];
     if(str != NULL){
