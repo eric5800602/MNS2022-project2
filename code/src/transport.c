@@ -58,13 +58,16 @@ uint8_t *dissect_tcp(Net *net, Txp *self, uint8_t *segm, size_t segm_len)
     // (Check IP addr & port to determine the next seq and ack value)
     //store as byte
     self->hdrlen = (uint8_t)tcph->doff *4;
-    /* I don't know how to calculate plen */
-    self->plen = segm_len;
-    //printf("%d\n",self->hdrlen);
+    /* Use 0x0a to find the tail of pl and calculate plen */
+    uint8_t *payload = (uint8_t *)segm;
+    uint8_t len = self->hdrlen;
+    while(payload[len] != 0x0a){
+        len++;
+    }
+    self->plen = (len-self->hdrlen+1);
     //printf("src = %d\n",ntohs(self->x_src_port));
     //printf("dst = %d\n",ntohs(self->x_dst_port));
     self->pl = segm + self->hdrlen;
-    self->thdr.seq = self->thdr.seq + 71; //71 is for "I am client, and I am keeping sending message to server hahahaha";
     // Return payload of TCP
     /* Checksum test */
     // self->thdr.check = 0;
@@ -77,11 +80,14 @@ Txp *fmt_tcp_rep(Txp *self, struct iphdr iphdr, uint8_t *data, size_t dlen)
 {
     // [TODO]: Fill up self->tcphdr (prepare to send)
     // Sequence Number (calculate before)
-    self->thdr.seq = self->x_tx_seq;
+    self->thdr.seq = htonl(self->x_tx_seq);
+    //printf("self->thdr.seq = %x\n",self->thdr.seq);
     // Acknowledge Number (calculate before)
-    self->thdr.ack_seq = self->x_tx_ack;
+    self->thdr.ack_seq = htonl(self->x_tx_ack);
     // PSH (calculate before)
     self->thdr.psh = self->thdr.psh;
+    self->thdr.th_sport = htons(self->x_src_port);
+    self->thdr.th_dport = htons(self->x_dst_port);
     //payload
     memset(self->pl,0,IP_MAXPACKET * sizeof(uint8_t));
     memcpy(self->pl, data, dlen);
