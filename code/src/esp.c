@@ -90,11 +90,11 @@ void get_ik(int type, uint8_t **key)
 			msglen -= ext->sadb_ext_len << 3;
 			ext = (char *)ext + (ext->sadb_ext_len << 3);
 		}
-		if (esp_hdr_rec.spi == spi)
+		
+		if (ntohl(esp_hdr_rec.spi) == spi)
 		{
 			*key = (uint8_t *)malloc(strlen(auth_key));
 			memcpy(*key, auth_key, strlen(auth_key));
-			printf("spi : %x auth_key : %s key : %s\n", spi, auth_key, *key);
 			break;
 		}
 		if (msgp->sadb_msg_seq == 0)
@@ -131,15 +131,41 @@ uint8_t *set_esp_auth(Esp *self,
 		fprintf(stderr, "Invalid arguments of %s().\n", __func__);
 		return NULL;
 	}
+	
 
-	uint8_t buff[BUFSIZE];
-	size_t esp_keylen = 16;
-	size_t nb = 0; // Number of bytes to be hashed
-	ssize_t ret;
+	size_t esp_keylen = strlen(self->esp_key);
+	size_t nb = sizeof(EspHeader) + self->plen + self->tlr.pad_len + sizeof(EspTrailer); // Number of bytes to be hashed	
+	uint8_t *buff = (uint8_t *)malloc(nb); // esp header to esp trailer
+	int temp_size = 0;	
+	
+	memcpy(buff, &(self->hdr.spi), sizeof(uint32_t));
+	temp_size += sizeof(uint32_t);
+	memcpy(buff + temp_size, &(self->hdr.seq), sizeof(uint32_t));
+	temp_size += sizeof(uint32_t);
+	memcpy(buff + temp_size, self->pl, self->plen);
+	temp_size += self->plen;
+	memcpy(buff + temp_size, self->pad, self->tlr.pad_len);
+	temp_size += self->tlr.pad_len;
+	memcpy(buff + temp_size, &(self->tlr.pad_len), sizeof(uint8_t));
+	temp_size += sizeof(uint8_t);
+	memcpy(buff + temp_size, &(self->tlr.nxt), sizeof(uint8_t));
+
+	uint8_t *temp_auth = (uint8_t *)malloc(esp_keylen);
+
+	for (int i = 0, cur = 0; i < esp_keylen; i++, cur += 2)
+	{
+		char *temp_str = (char *)malloc(2);
+		memcpy(temp_str, self->esp_key + cur, 2);
+		long int partConvert = strtol(temp_str, NULL, 16);
+		memcpy(temp_auth + i, &partConvert, 2);
+	}
+
+	size_t ret;
 
 	// [TODO]: Put everything needed to be authenticated into buff and add up nb
 
-	ret = hmac(self->esp_key, esp_keylen, buff, nb, self->auth);
+	
+	ret = hmac(temp_auth, strlen(temp_auth), buff, nb, self->auth);
 
 	if (ret == -1)
 	{
@@ -177,8 +203,6 @@ Esp *fmt_esp_rep(Esp *self, Proto p)
 	// hearder processing
 	uint32_t temp_seq = esp_hdr_rec.seq + 1;
 	self->hdr.seq = htonl(temp_seq);
-	// printf("fmt_esp_rep seq : %u self->hdr.seq : %u\n", temp_seq, self->hdr.seq);
-	// printf("self->hdr.seq : %u self->hdr.spi : %x\n", ntohl(self->hdr.seq), self->hdr.spi);
 
 	// trailer processing
 	self->tlr.nxt = p;
