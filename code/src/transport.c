@@ -61,7 +61,7 @@ uint8_t *dissect_tcp(Net *net, Txp *self, uint8_t *segm, size_t segm_len)
     /* Use 0x0a to find the tail of pl and calculate plen */
     uint8_t *payload = (uint8_t *)segm;
     uint8_t len = self->hdrlen;
-    while(payload[len] != 0x0a){
+    while(payload[len+1] != 0x00 && payload[len+1] != 0x01){
         len++;
     }
     self->plen = (len-self->hdrlen+1);
