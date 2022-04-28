@@ -72,7 +72,6 @@ ssize_t send_msg(Dev *dev,
         nb = 0;
     }
     tx_esp_rep(*dev, *net, *esp, *txp, buf, nb, 0);
-
     return nb;
 }
 
@@ -93,7 +92,7 @@ bool dissect_rx_data(Dev *dev,
         uint8_t *esp_data = esp->dissect(esp, net_data, net->plen);
 
         uint8_t *txp_data = txp->dissect(net, txp, esp_data, esp->plen);
-        //printf("txp->thdr.psh : %u\n", txp->thdr.psh);
+        // printf("txp->thdr.psh : %u\n", txp->thdr.psh);
         if (txp->thdr.psh)
         {
             if (*test_for_dissect)
@@ -107,7 +106,6 @@ bool dissect_rx_data(Dev *dev,
                     puts("you can start to send the message...");
                 }
             }
-
             if (txp_data != NULL && txp->thdr.psh && *state == WAIT_SECRET &&
                 strcmp(victim_ip, net->dst_ip) == 0 && strcmp(server_ip, net->src_ip) == 0)
             {
@@ -135,7 +133,6 @@ uint8_t *wait(Dev *dev,
 
     while (true)
     {
-        //printf("check enrty\n");
         dev->framelen = dev->rx_frame(dev);
         dissect_finish = dissect_rx_data(dev, net, esp, txp, state, victim_ip, server_ip, test_for_dissect) ? true : false;
         if (dissect_finish)
@@ -177,7 +174,6 @@ void get_info(Dev *dev, Net *net, Esp *esp, Txp *txp, int *state, char *victim_i
     extern EspHeader esp_hdr_rec;
     // printf("get info victim_ip : %s  server_ip: %s\n", victim_ip, server_ip);
     wait(dev, net, esp, txp, state, victim_ip, server_ip, test_for_dissect);
-
     if (*state != SEND_ACK)
     {
 

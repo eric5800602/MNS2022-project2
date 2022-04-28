@@ -52,7 +52,7 @@ void ipsec_hijack(char *INTERFACE)
     while(1){
         /*you have to get the information from the packet you are sniffing*/
         get_info(&dev, &net, &esp, &txp, state, victim_ip, server_ip, test_for_dissect);
-
+        
         if(first){
             first = false;
             strcpy(victim_ip, net.src_ip);
